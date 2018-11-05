@@ -104,16 +104,25 @@ fn main() {
         }
     }
     let sig_cert_input = untrusted::Input::from(&sig_cert_dec);
-    let sig_cert = webpki::EndEntityCert::from(sig_cert_input).expect("Bad DER");
+    let sig_cert: webpki::EndEntityCert;
+    match webpki::EndEntityCert::from(sig_cert_input) {
+        Ok(v) => {
+            sig_cert = v;
+        },
+        _ => {
+            println!("Bad DER");
+            ::std::process::exit(sgx_status_t::SGX_ERROR_UNEXPECTED as i32);
+        }
+    }
 
     println!("==== Loaded Attestation Report ====");
     println!("{}", ::serde_json::to_string_pretty(&attn_report).unwrap());
     println!();
     println!("==== Loaded Report Signature ====");
-    println!("{:02x}", IAS_REPORT_SIGNATURE.iter().format(""));
+    println!("{:02x}", sig.iter().format(""));
     println!();
     println!("==== Loaded Report Signing Certificate ====");
-    println!("{:?}", IAS_REPORT_SIGNING_CERTIFICATE.iter().format(""));
+    println!("{:?}", sig_cert_dec.iter().format(""));
     println!();
 
     // Load Intel CA
