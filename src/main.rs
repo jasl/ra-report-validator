@@ -3,10 +3,7 @@ extern crate webpki;
 extern crate rustls;
 extern crate base64;
 extern crate itertools;
-extern crate untrusted;
 extern crate serde_json;
-extern crate num_bigint;
-extern crate bit_vec;
 extern crate hex;
 extern crate sgx_types;
 
@@ -99,7 +96,6 @@ fn main() {
             ::std::process::exit(sgx_status_t::SGX_ERROR_UNEXPECTED as i32);
         }
     }
-    // let sig_cert_input = untrusted::Input::from(&sig_cert_dec);
     let sig_cert: webpki::EndEntityCert;
     match webpki::EndEntityCert::from(&sig_cert_dec) {
         Ok(v) => {
