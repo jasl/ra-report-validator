@@ -33,10 +33,6 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
     &webpki::ECDSA_P256_SHA384,
     &webpki::ECDSA_P384_SHA256,
     &webpki::ECDSA_P384_SHA384,
-    &webpki::RSA_PSS_2048_8192_SHA256_LEGACY_KEY,
-    &webpki::RSA_PSS_2048_8192_SHA384_LEGACY_KEY,
-    &webpki::RSA_PSS_2048_8192_SHA512_LEGACY_KEY,
-    &webpki::RSA_PKCS1_2048_8192_SHA1,
     &webpki::RSA_PKCS1_2048_8192_SHA256,
     &webpki::RSA_PKCS1_2048_8192_SHA384,
     &webpki::RSA_PKCS1_2048_8192_SHA512,
@@ -94,7 +90,7 @@ fn main() {
     }
 
     let sig_cert_dec: Vec<u8>;
-    match base64::decode_config(&sig_cert_raw, base64::MIME) {
+    match base64::decode_config(&sig_cert_raw, base64::STANDARD) {
         Ok(v) => {
             sig_cert_dec = v;
         },
@@ -103,9 +99,9 @@ fn main() {
             ::std::process::exit(sgx_status_t::SGX_ERROR_UNEXPECTED as i32);
         }
     }
-    let sig_cert_input = untrusted::Input::from(&sig_cert_dec);
+    // let sig_cert_input = untrusted::Input::from(&sig_cert_dec);
     let sig_cert: webpki::EndEntityCert;
-    match webpki::EndEntityCert::from(sig_cert_input) {
+    match webpki::EndEntityCert::from(&sig_cert_dec) {
         Ok(v) => {
             sig_cert = v;
         },
@@ -129,11 +125,10 @@ fn main() {
     let mut ias_ca_stripped = IAS_REPORT_CA.to_vec();
     ias_ca_stripped.retain(|&x| x != 0x0d && x != 0x0a);
     let head_len = "-----BEGIN CERTIFICATE-----".len();
-    let tail_len = "-----BEGIN CERTIFICATE-----".len();
+    let tail_len = "-----END CERTIFICATE-----".len();
     let full_len = ias_ca_stripped.len();
     let ias_ca_core : &[u8] = &ias_ca_stripped[head_len..full_len - tail_len];
-    let ias_cert_dec = base64::decode_config(ias_ca_core, base64::MIME).unwrap();
-    let ias_cert_input = untrusted::Input::from(&ias_cert_dec);
+    let ias_cert_dec = base64::decode_config(ias_ca_core, base64::STANDARD).unwrap();
 
     let mut ca_reader = BufReader::new(&IAS_REPORT_CA[..]);
 
@@ -146,8 +141,8 @@ fn main() {
         .map(|cert| cert.to_trust_anchor())
         .collect();
 
-    let mut chain:Vec<untrusted::Input> = Vec::new();
-    chain.push(ias_cert_input);
+    let mut chain:Vec<&[u8]> = Vec::new();
+    chain.push(&ias_cert_dec);
 
     let now_func = webpki::Time::try_from(SystemTime::now());
 
@@ -163,8 +158,8 @@ fn main() {
     // Verify the signature against the signing cert
     match sig_cert.verify_signature(
         &webpki::RSA_PKCS1_2048_8192_SHA256,
-        untrusted::Input::from(&attn_report_raw),
-        untrusted::Input::from(&sig)) {
+        &attn_report_raw,
+        &sig) {
         Ok(_) => println!("Signature good"),
         Err(e) => {
             println!("Signature verification error {:?}", e);
