@@ -47,15 +47,24 @@ fn main() {
     println!("{:?}", args);
 
     let attn_report_raw = match args.get(1) {
-        Some(v) => v.as_bytes(),
+        Some(v) => {
+            println!("Load IAS Report from Arg");
+            v.as_bytes()
+        },
         _ => IAS_REPORT_SAMPLE
     };
     let sig_raw = match args.get(2) {
-        Some(v) => v.as_bytes(),
+        Some(v) => {
+            println!("Load IAS Report Sig from Arg");
+            v.as_bytes()
+        },
         _ => IAS_REPORT_SIGNATURE
     };
     let sig_cert_raw = match args.get(3) {
-        Some(v) => v.as_bytes(),
+        Some(v) => {
+            println!("Load IAS Report Sig Cert from Arg");
+            v.as_bytes()
+        },
         _ => IAS_REPORT_SIGNING_CERTIFICATE
     };
 
@@ -165,17 +174,17 @@ fn main() {
 
     // Verify attestation report
     // 1. Check timestamp is within 24H
-    let attn_report: Value = serde_json::from_slice(attn_report_raw).unwrap();
-    if let Value::String(time) = &attn_report["timestamp"] {
-        let time_fixed = time.clone() + "+0000";
-        let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
-        println!("Time diff = {}", now - ts);
-        // TODO: Let it fail when the timestamp too old.
-    } else {
-        println!("Failed to fetch timestamp from attestation report");
-        ::std::process::exit(sgx_status_t::SGX_ERROR_UNEXPECTED as i32);
-    }
+    // let attn_report: Value = serde_json::from_slice(attn_report_raw).unwrap();
+    // if let Value::String(time) = &attn_report["timestamp"] {
+    //     let time_fixed = time.clone() + "+0000";
+    //     let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
+    //     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+    //     println!("Time diff = {}", now - ts);
+    //     // TODO: Let it fail when the timestamp too old.
+    // } else {
+    //     println!("Failed to fetch timestamp from attestation report");
+    //     ::std::process::exit(sgx_status_t::SGX_ERROR_UNEXPECTED as i32);
+    // }
 
     // 2. Verify quote status (mandatory field)
     if let Value::String(quote_status) = &attn_report["isvEnclaveQuoteStatus"] {
