@@ -51,14 +51,14 @@ fn main() {
             println!("Load IAS Report from Arg");
             v.as_bytes()
         },
-        _ => IAS_REPORT_SAMPLE
+        _ => panic!("No IAS Report provided")
     };
     let sig_raw = match args.get(2) {
         Some(v) => {
             println!("Load IAS Report Sig from Arg");
             v.as_bytes()
         },
-        _ => IAS_REPORT_SIGNATURE
+        _ => panic!("No IAS Report Sig provided")
     };
     let sig_cert_raw = match args.get(3) {
         Some(v) => {
